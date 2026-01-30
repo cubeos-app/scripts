@@ -25,10 +25,15 @@ deploy:
     - echo "Deploying scripts to /cubeos/scripts/..."
     - mkdir -p /cubeos/scripts
     - |
+      # Copy shell scripts
       for script in *.sh; do
         [ -f "$script" ] && cp "$script" /cubeos/scripts/ && chmod +x /cubeos/scripts/"$script"
       done
-    - ls -la /cubeos/scripts/*.sh
+      # Copy systemd unit files
+      for unit in *.service *.timer; do
+        [ -f "$unit" ] && cp "$unit" /cubeos/scripts/
+      done
+    - ls -la /cubeos/scripts/
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
   environment:
