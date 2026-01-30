@@ -1,7 +1,6 @@
 #!/bin/bash
 # CubeOS NPM Auto-Configuration Script
 # Configures Nginx Proxy Manager with all core app proxy hosts
-
 set -e
 
 NPM_HOST="${NPM_HOST:-192.168.42.1}"
@@ -39,7 +38,7 @@ echo "Authenticated"
 
 # Function to create proxy host
 create_proxy() {
-    local subdomain="$1" port="$2"
+    local subdomain="$1" port="$2" advanced_config="${3:-}"
     local domain="$([[ "$subdomain" == "@" ]] && echo "$BASE_DOMAIN" || echo "${subdomain}.${BASE_DOMAIN}")"
     
     echo -n "  $domain -> :$port..."
@@ -53,37 +52,82 @@ create_proxy() {
         return
     fi
     
+    # Build JSON payload
+    local json_payload
+    if [[ -n "$advanced_config" ]]; then
+        json_payload=$(cat <<EOF
+{
+    "domain_names": ["$domain"],
+    "forward_scheme": "http",
+    "forward_host": "$LOCAL_IP",
+    "forward_port": $port,
+    "access_list_id": 0,
+    "certificate_id": 0,
+    "ssl_forced": false,
+    "block_exploits": true,
+    "allow_websocket_upgrade": true,
+    "enabled": true,
+    "locations": [],
+    "advanced_config": "$advanced_config"
+}
+EOF
+)
+    else
+        json_payload=$(cat <<EOF
+{
+    "domain_names": ["$domain"],
+    "forward_scheme": "http",
+    "forward_host": "$LOCAL_IP",
+    "forward_port": $port,
+    "access_list_id": 0,
+    "certificate_id": 0,
+    "ssl_forced": false,
+    "block_exploits": true,
+    "allow_websocket_upgrade": true,
+    "enabled": true,
+    "locations": []
+}
+EOF
+)
+    fi
+    
     curl -sf -X POST "$NPM_API/nginx/proxy-hosts" \
         -H "Authorization: Bearer $TOKEN" \
         -H "Content-Type: application/json" \
-        -d "{
-            \"domain_names\": [\"$domain\"],
-            \"forward_scheme\": \"http\",
-            \"forward_host\": \"$LOCAL_IP\",
-            \"forward_port\": $port,
-            \"access_list_id\": 0,
-            \"certificate_id\": 0,
-            \"ssl_forced\": false,
-            \"block_exploits\": true,
-            \"allow_websocket_upgrade\": true,
-            \"enabled\": true,
-            \"locations\": []
-        }" >/dev/null && echo " created" || echo " failed"
+        -d "$json_payload" >/dev/null && echo " created" || echo " failed"
 }
 
 echo ""
 echo "Creating proxy hosts..."
+
+# Main dashboard
 create_proxy "@" 8087
 create_proxy "dashboard" 8087
+
+# API
 create_proxy "api" 9009
-create_proxy "dns" 6001
-create_proxy "pihole" 6001
+
+# NPM Admin UI (port 6000 maps to internal 81)
+create_proxy "npm" 6000
+
+# Pi-hole (port 8080, rewrite to /admin)
+# Note: Pi-hole v6 serves web UI at root, but some versions need /admin
+create_proxy "pihole" 8080
+create_proxy "dns" 8080
+
+# Dockge
 create_proxy "stacks" 6002
 create_proxy "dockge" 6002
+
+# Homarr (homepage)
 create_proxy "home" 6003
 create_proxy "homarr" 6003
+
+# Dozzle (logs)
 create_proxy "logs" 6004
+
+# Terminal (ttyd)
 create_proxy "terminal" 6009
 
 echo ""
-echo "Done! Access: https://$BASE_DOMAIN"
+echo "Done! Access: http://$BASE_DOMAIN"
