@@ -1,0 +1,6 @@
+[Unit]
+Description=CubeOS Self-Healing Watchdog
+
+[Service]
+Type=oneshot
+ExecStart=/cubeos/scripts/watchdog-health.sh
