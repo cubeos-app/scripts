@@ -1,0 +1,35 @@
+stages:
+  - lint
+  - deploy
+
+variables:
+  GIT_DEPTH: 0
+
+shellcheck:
+  stage: lint
+  image: koalaman/shellcheck-alpine:stable
+  tags:
+    - multiarch
+  script:
+    - echo "Running shellcheck on all .sh files..."
+    - find . -name "*.sh" -type f -exec shellcheck -x {} \;
+  rules:
+    - if: $CI_COMMIT_BRANCH
+
+deploy:
+  stage: deploy
+  tags:
+    - deploy
+    - arm64
+  script:
+    - echo "Deploying scripts to /cubeos/scripts/..."
+    - mkdir -p /cubeos/scripts
+    - |
+      for script in *.sh; do
+        [ -f "$script" ] && cp "$script" /cubeos/scripts/ && chmod +x /cubeos/scripts/"$script"
+      done
+    - ls -la /cubeos/scripts/*.sh
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  environment:
+    name: production
