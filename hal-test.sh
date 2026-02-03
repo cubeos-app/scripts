@@ -150,11 +150,11 @@ fi
 
 log_header "SYSTEM"
 
-test_endpoint_json GET "/system/uptime" "System uptime" "uptime_seconds"
-test_endpoint_json GET "/system/temperature" "CPU temperature" "cpu_celsius"
+test_endpoint_json GET "/system/uptime" "System uptime" "seconds"
+test_endpoint_json GET "/system/temperature" "CPU temperature" "cpu"
 test_endpoint_json GET "/system/throttle" "Throttle status" "throttled"
-test_endpoint_json GET "/system/eeprom" "EEPROM info" "serial"
-test_endpoint_json GET "/system/bootconfig" "Boot config" "config"
+test_endpoint_json GET "/system/eeprom" "EEPROM info" "board_info"
+test_endpoint_json GET "/system/bootconfig" "Boot config" "parameters"
 
 # =============================================================================
 # Power Management
@@ -165,7 +165,7 @@ log_header "POWER MANAGEMENT"
 test_endpoint_json GET "/power/battery" "Battery status" "available"
 test_endpoint_json GET "/power/ups" "UPS status" "available"
 test_endpoint_json GET "/rtc/status" "RTC status" "available"
-test_endpoint_json GET "/watchdog/status" "Watchdog status" "available"
+test_endpoint_json GET "/watchdog/status" "Watchdog status" "device"
 
 # =============================================================================
 # Storage Endpoints
@@ -173,9 +173,9 @@ test_endpoint_json GET "/watchdog/status" "Watchdog status" "available"
 
 log_header "STORAGE"
 
-test_endpoint_json GET "/storage/devices" "Storage devices" "count"
+test_endpoint_json GET "/storage/devices" "Storage devices" "devices"
 test_endpoint_json GET "/storage/usage" "Disk usage" "filesystems"
-test_endpoint_json GET "/storage/usb" "USB storage" "count"
+test_endpoint_json GET "/storage/usb" "USB storage" "devices"
 
 # SMART test - need a valid device
 if curl -s "$BASE_URL/storage/devices" | jq -e '.devices[0].name' >/dev/null 2>&1; then
@@ -202,9 +202,9 @@ test_endpoint_json GET "/ap/clients" "AP clients" "clients"
 
 log_header "LOGS & DEBUG"
 
-test_endpoint_json GET "/logs/kernel?lines=10" "Kernel logs" "lines"
-test_endpoint_json GET "/logs/journal?lines=10" "Journal logs" "lines"
-test_endpoint_json GET "/logs/hardware?category=net" "Hardware logs" "entries"
+test_endpoint_json GET "/logs/kernel?lines=10" "Kernel logs" "log"
+test_endpoint_json GET "/logs/journal?lines=10" "Journal logs" "log"
+test_endpoint_json GET "/logs/hardware?category=net" "Hardware logs" "log"
 
 # Support bundle test (just check endpoint responds, don't download)
 printf "  %-50s " "Support bundle endpoint"
@@ -231,7 +231,7 @@ test_endpoint_json GET "/vpn/tor/config" "Tor config" "config"
 
 log_header "GPS (NMEA)"
 
-test_endpoint_json GET "/gps/devices" "GPS devices" "count"
+test_endpoint_json GET "/gps/devices" "GPS devices" "devices"
 test_endpoint_json GET "/gps/status" "GPS status" "available"
 
 # =============================================================================
@@ -241,7 +241,7 @@ test_endpoint_json GET "/gps/status" "GPS status" "available"
 log_header "CELLULAR (ModemManager)"
 
 test_endpoint_json GET "/cellular/status" "Cellular status" "available"
-test_endpoint_json GET "/cellular/modems" "Cellular modems" "count"
+test_endpoint_json GET "/cellular/modems" "Cellular modems" "modems"
 
 # =============================================================================
 # Meshtastic
@@ -249,7 +249,7 @@ test_endpoint_json GET "/cellular/modems" "Cellular modems" "count"
 
 log_header "MESHTASTIC (LoRa)"
 
-test_endpoint_json GET "/meshtastic/devices" "Meshtastic devices" "count"
+test_endpoint_json GET "/meshtastic/devices" "Meshtastic devices" "devices"
 test_endpoint_json GET "/meshtastic/status" "Meshtastic status" "available"
 
 # =============================================================================
@@ -258,7 +258,7 @@ test_endpoint_json GET "/meshtastic/status" "Meshtastic status" "available"
 
 log_header "IRIDIUM (SBD)"
 
-test_endpoint_json GET "/iridium/devices" "Iridium devices" "count"
+test_endpoint_json GET "/iridium/devices" "Iridium devices" "devices"
 test_endpoint_json GET "/iridium/status" "Iridium status" "available"
 
 # =============================================================================
@@ -267,7 +267,7 @@ test_endpoint_json GET "/iridium/status" "Iridium status" "available"
 
 log_header "CAMERA"
 
-test_endpoint_json GET "/camera/devices" "Camera devices" "count"
+test_endpoint_json GET "/camera/devices" "Camera devices" "cameras"
 
 # =============================================================================
 # 1-Wire Sensors
@@ -275,7 +275,7 @@ test_endpoint_json GET "/camera/devices" "Camera devices" "count"
 
 log_header "1-WIRE SENSORS (DS18B20)"
 
-test_endpoint_json GET "/onewire/devices" "1-Wire devices" "count"
+test_endpoint_json GET "/onewire/devices" "1-Wire devices" "sensors"
 
 # =============================================================================
 # Environmental Sensors
@@ -283,7 +283,7 @@ test_endpoint_json GET "/onewire/devices" "1-Wire devices" "count"
 
 log_header "ENVIRONMENTAL SENSORS (BME280)"
 
-test_endpoint_json GET "/environmental/sensors" "Environmental sensors" "count"
+test_endpoint_json GET "/environmental/sensors" "Environmental sensors" "sensors"
 
 # =============================================================================
 # SDR
@@ -291,7 +291,7 @@ test_endpoint_json GET "/environmental/sensors" "Environmental sensors" "count"
 
 log_header "SDR (RTL-SDR)"
 
-test_endpoint_json GET "/sdr/devices" "SDR devices" "count"
+test_endpoint_json GET "/sdr/devices" "SDR devices" "devices"
 
 # =============================================================================
 # Audio
@@ -299,7 +299,7 @@ test_endpoint_json GET "/sdr/devices" "SDR devices" "count"
 
 log_header "AUDIO"
 
-test_endpoint_json GET "/audio/devices" "Audio devices" "count"
+test_endpoint_json GET "/audio/devices" "Audio devices" "devices"
 test_endpoint_json GET "/audio/volume" "Audio volume" "available"
 
 # =============================================================================
@@ -308,7 +308,7 @@ test_endpoint_json GET "/audio/volume" "Audio volume" "available"
 
 log_header "GPIO"
 
-test_endpoint_json GET "/gpio/pins" "GPIO pins" "count"
+test_endpoint_json GET "/gpio/pins" "GPIO pins" "pins"
 
 # =============================================================================
 # I2C
@@ -316,7 +316,7 @@ test_endpoint_json GET "/gpio/pins" "GPIO pins" "count"
 
 log_header "I2C"
 
-test_endpoint_json GET "/i2c/scan?bus=1" "I2C scan bus 1" "bus"
+test_endpoint_json GET "/i2c/scan?bus=1" "I2C scan bus 1" "devices"
 
 # =============================================================================
 # USB
